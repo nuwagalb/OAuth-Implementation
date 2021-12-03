@@ -1,0 +1,99 @@
+Globomantics' HR has a new initiative that is aimed at saving on the healthcare expenses
+it offers it's employees. The Healthcare system at Globomantics works in such a way that
+Globomantics HR is responsible for meeting all the health care expenses of it's employees.
+Even though Globomantics HR is responsible for meeting all the health care expenses of all
+it's employees, each employee contributes a certain percentange to the general pool that 
+Globomantics HR uses to meet the health care needs of all it's employees. Globomantics HR's
+initiative is aimed at encouraging most of it's employees to get healthier by exercising
+and visiting the gym regularly. This will save it from spending alot of money in healthcare
+seeing that most of it's employees will be healthy and have no need for healthcare expenses.
+To encourage it's employees to visit the gym, Globomantics HR offers credits and discounts
+to it's employees that visit the gym regularly. The more an employee visits the gym, the
+less amount of money they have to contribute towards Globomantics HR overall healthcare 
+pool. So Globomantics HR has decided to partner with a fitness company and gym known as 
+Carved Rock Fitness. This company shares information with Globomantics HR of how the 
+Globomantics employees are  utilizing it's services. The Globomantics employees have 
+authorized their HR department to pull out different datapoints of their activities at the 
+Carved Rock Fitness Gym so that Globomantics HR can give them credits and discounts on their
+healthcare contributions. This initiative will benefit both the Globomantics HR and 
+Globomantics employees.
+-> Globomantics HR saves on the overall amount of money it has to spend in healthcare seeing
+   that most of it's employees are health as a result of visiting the gym and exercising more.
+-> Globomantics employees will also save on their own money since Globomantics HR will 
+   give them a discount on the amount of money they need to contribute towards the overall
+   Globomantics HR healthcare pool
+
+For the initiative to work, the following conditions have to exist
+-> Globomantics HR should be able to share information with Carved Rock Fitness
+-> Because information needs to be shared, Globomantics systems should be able to communicate 
+   with Carved Rock Fitness systems
+-> And because these two systems need to communicate with each other, there is need for:
+   1. finding a good protocol that will allow easy communication between the two different
+      systems.
+   2. securing the data that will be shared by the two different systems to protect it from
+      unauthenticated personel
+   3. a way that enables the users of these two systems to provide permission for the systems
+      to be able to communicate with each other.
+
+SOLUTION
+-> As the developer charged with bringing Globomantics' initiative into life, I will use the
+   OAuth (open-standard authorization protocol or framework) to ensure that the conditions
+   needed for Globomantics HR systems to communicate with Carved Rock Fitness Systems are met.
+   
+   WHY OAuth?
+   -> OAuth works well with the HTTP and HTTPS communication protocols so our two systems will
+      be able to communicate (share data) with each other
+   -> OAuth also utilizes HTTPs (which is a secure protocol for transmitting data) and also
+      supports authentication. It also uses solid security practices in order to keep data 
+      secure
+   -> OAuth as an authorization protocol also provides a way for users to grant permission for
+      one application to access another application. It allows users to control what type of
+      data they can share with whichever application they choose to share it with.
+   
+   HOW DOES OAuth WORK?
+   Step 1 – The User Shows Intent
+   -> Globomantics Employee (User): “Hey, Globomantics HR System, I would like you to get my
+      work out data directly from Carved Rock Fitness System"
+   -> Globomantics HR System (Consumer): “Great! Let me go ask for permission.”
+
+   Step 2 – The Consumer Gets Permission
+   -> Globomantics HR System: “I have a user that would like me to get their work out data.
+      Can I have a request token?”
+   -> Carved Rock Fitness System (Service Provider): “Sure. Here’s a token and a secret.”
+      - the secret is used to prevent request forgery. The consumer uses the secret to 
+        sign each request so that the service provider can verify it is actually coming 
+        from the consumer application.
+    
+    Step 3 – The User Is Redirected to the Service Provider
+    -> Globomantics HR System: “OK, Globomantics Employee (User).  I’m sending you over 
+       to Carved Rock Fitness System so you can approve. Take this token with you.”
+    -> Globomantics Employee (User): “OK!”
+
+    Note:
+    -> At this point, Globomantics HR System directs Globomantics Employee (user) to Carved 
+       Rock Fitness System for authorization
+    -> This is the scary part. If Globomantics HR System were a super-shady Evil Co, it could 
+       pop up a window that looked like Carved Rock Fitness System but was really phishing 
+       for your username and password. Always be sure to verify that the URL you’re directed 
+       to is actually the service provider (Carved Rock Fitness System, in this case)
+
+    Step 4 – The User Gives Permission
+    -> Globomantics Employee (User): “Carved Rock Fitness System, I’d like to authorize this 
+       request token that Globomantics HR System gave me.”
+    -> Carved Rock Fitness System: “OK, just to be sure, you want to authorize Globomantics HR
+       System to do X, Y, and Z with your Carved Rock Fitness account?”
+    -> Globomantics Employee (User): “Yes!”
+    -> Carved Rock Fitness System: “OK, you can go back to Globomantics HR System and tell them 
+       they have permission to use their request token.”
+
+    Step 5 – The Consumer Obtains an Access Token
+    -> Globomantics HR System: “Carved Rock Fitness System, can I exchange this request token 
+       for an access token?”
+    -> Carved Rock Fitness System: “Sure. Here’s your access token and secret.”
+
+    Step 6 – The Consumer Accesses the Protected Resource
+    -> Globomantics HR System: “I’d like to get work out data for Globomantics Employee (User). 
+       Here’s my access token!”
+    -> Carved Rock Fitness System: “Done!”
+
+
