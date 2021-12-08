@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({ extended: true })); // support form-encoded bodi
 
 app.engine('html', cons.underscore);
 app.set('view engine', 'html');
-app.set('views', 'ui/authorizationServer');
+app.set('views', 'files/authorizationServer');
 app.set('json spaces', 4);
 
 // authorization server information
@@ -311,7 +311,7 @@ var getScopesFromForm = function(body) {
 				.map(function(s) { return s.slice('scope_'.length); });
 };
 
-app.use('/', express.static('ui/authorizationServer'));
+app.use('/', express.static('files/authorizationServer'));
 
 var server = app.listen(9003, 'localhost', function () {
   var host = server.address().address;
@@ -319,3 +319,4 @@ var server = app.listen(9003, 'localhost', function () {
 
   console.log('Carved Rock Authorization Server is listening at http://%s:%s', host, port);
 });
+ 
