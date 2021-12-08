@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.engine('html', cons.underscore);
 app.set('view engine', 'html');
-app.set('views', 'files/client');
+app.set('views', 'ui/client');
 
 // authorization server information
 var authServer = {
@@ -255,7 +255,7 @@ app.get('/gymStats', function(req, res) {
 	
 });
 
-app.use('/', express.static('files/client'));
+app.use('/', express.static('ui/client'));
 
 var buildUrl = function(base, options, hash) {
 	var newUrl = url.parse(base, true);
