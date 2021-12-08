@@ -1,14 +1,14 @@
-let express = require("express");
-let url = require("url");
-let bodyParser = require('body-parser');
-let randomstring = require("randomstring");
-let cons = require('consolidate');
-let querystring = require('querystring');
-let jose = require('jsrsasign');
-let __ = require('underscore');
+var express = require("express");
+var url = require("url");
+var bodyParser = require('body-parser');
+var randomstring = require("randomstring");
+var cons = require('consolidate');
+var querystring = require('querystring');
+var jose = require('jsrsasign');
+var __ = require('underscore');
 __.string = require('underscore.string');
 
-let app = express();
+var app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // support form-encoded bodies (for the token endpoint)
@@ -19,13 +19,13 @@ app.set('views', 'ui/authorizationServer');
 app.set('json spaces', 4);
 
 // authorization server information
-let authServer = {
+var authServer = {
 	authorizationEndpoint: 'http://localhost:9003/authorize',
 	tokenEndpoint: 'http://localhost:9003/token'
 };
 
 // client information
-let clients = [
+var clients = [
 	{
 		"client_id": "globomantics-client-1",
 		"client_secret": "globomantics-client-secret-1",
@@ -34,7 +34,7 @@ let clients = [
 	}
 ];
 
-let rsaKey = {
+var rsaKey = {
     "alg": "RS256",
     "d": "ZXFizvaQ0RzWRbMExStaS_-yVnjtSQ9YslYQF1kkuIoTwFuiEQ2OywBfuyXhTvVQxIiJqPNnUyZR6kXAhyj__wS_Px1EH8zv7BHVt1N5TjJGlubt1dhAFCZQmgz0D-PfmATdf6KLL4HIijGrE8iYOPYIPF_FL8ddaxx5rsziRRnkRMX_fIHxuSQVCe401hSS3QBZOgwVdWEb1JuODT7KUk7xPpMTw5RYCeUoCYTRQ_KO8_NQMURi3GLvbgQGQgk7fmDcug3MwutmWbpe58GoSCkmExUS0U-KEkHtFiC8L6fN2jXh1whPeRCa9eoIK8nsIY05gnLKxXTn5-aPQzSy6Q",
     "e": "AQAB",
@@ -43,25 +43,25 @@ let rsaKey = {
     "kid": "authserver"
   };
 
-let refreshTokens = {};
+var refreshTokens = {};
 
-let accessTokens = [];
+var accessTokens = [];
 
-let codes = {};
+var codes = {};
 
-let requests = {};
+var requests = {};
 
-let getClient = function(clientId) {
+var getClient = function(clientId) {
 	return __.find(clients, function(client) { return client.client_id == clientId; });
 };
 
 app.get('/', function(req, res) {
 	res.render('index', {clients: clients, authServer: authServer});
-}); //end of app.get('/')
+});
 
 app.get("/authorize", function(req, res){
 	
-    let client = getClient(req.query.client_id);
+    var client = getClient(req.query.client_id);
     
 	if (!client) {
 		res.render('error', {error: 'Unknown client'});
@@ -70,10 +70,10 @@ app.get("/authorize", function(req, res){
 		res.render('error', {error: 'Invalid redirect URI'});
 		return;
 	} else {
-        let rscope = req.query.scope ? req.query.scope.split(' ') : undefined;
-        let cscope = client.scope ? client.scope.split(' ') : undefined;
+        var rscope = req.query.scope ? req.query.scope.split(' ') : undefined;
+        var cscope = client.scope ? client.scope.split(' ') : undefined;
         if (__.difference(rscope, cscope).length > 0) {
-            let urlParsed = buildUrl(req.query.redirect_uri, {
+            var urlParsed = buildUrl(req.query.redirect_uri, {
                 error: 'invalid_scope'
             });
             res.redirect(urlParsed);
@@ -81,18 +81,19 @@ app.get("/authorize", function(req, res){
         }
         
         // this could be the user session as well
-	    let reqid = randomstring.generate(8);
+	    var reqid = randomstring.generate(8);
 	    requests[reqid] = req.query;
 
         res.render('approve', {client: client, reqid: reqid, scope: rscope});
         return;
     } 
-}); //end of app.get('/')
+	
+});
 
 app.post('/approve', function(req, res) {
 
-	let reqid = req.body.reqid;
-	let query = requests[reqid];
+	var reqid = req.body.reqid;
+	var query = requests[reqid];
 	delete requests[reqid];
 
 	if (!query) {
@@ -105,22 +106,22 @@ app.post('/approve', function(req, res) {
 		if (query.response_type == 'code') {
             
             // user approved access
-            let rscope = getScopesFromForm(req.body);
-            let client = getClient(query.client_id);
-            let cscope = client.scope ? client.scope.split(' ') : undefined;
+            var rscope = getScopesFromForm(req.body);
+            var client = getClient(query.client_id);
+            var cscope = client.scope ? client.scope.split(' ') : undefined;
             if (__.difference(rscope, cscope).length > 0) {
-                let urlParsed = buildUrl(query.redirect_uri, {
+                var urlParsed = buildUrl(query.redirect_uri, {
                     error: 'invalid_scope'
                 });
                 res.redirect(urlParsed);
                 return;
             }
 
-			let code = randomstring.generate(8);
+			var code = randomstring.generate(8);
 
 			codes[code] = { request: query, scope: rscope };
 
-			let urlParsed = buildUrl(query.redirect_uri, {
+			var urlParsed = buildUrl(query.redirect_uri, {
 				code: code,
 				state: query.state
 			});
@@ -128,30 +129,30 @@ app.post('/approve', function(req, res) {
 			return;
 			
 		} else {
-			let urlParsed = buildUrl(query.redirect_uri, {
+			var urlParsed = buildUrl(query.redirect_uri, {
 				error: 'unsupported_response_type'
 			});
 			res.redirect(urlParsed);
 		}
 
 	} else {
-		let urlParsed = buildUrl(query.redirect_uri, {
+		var urlParsed = buildUrl(query.redirect_uri, {
 			error: 'access_denied'
 		});
 		res.redirect(urlParsed);
 		return;
 	}
 	
-}); //end of app.post('/approve')
+});
 
 app.post("/token", function(req, res){
 	
-	let auth = req.headers['authorization'];
+	var auth = req.headers['authorization'];
 	if (auth) {
 		// check the auth header
-		let clientCredentials = decodeClientCredentials(auth);
-		let clientId = clientCredentials.id;
-		let clientSecret = clientCredentials.secret;
+		var clientCredentials = decodeClientCredentials(auth);
+		var clientId = clientCredentials.id;
+		var clientSecret = clientCredentials.secret;
 	}
 	
 	// otherwise, check the post body
@@ -163,11 +164,11 @@ app.post("/token", function(req, res){
 			return;
 		}
 		
-		let clientId = req.body.client_id;
-		let clientSecret = req.body.client_secret;
+		var clientId = req.body.client_id;
+		var clientSecret = req.body.client_secret;
 	}
 	
-	let client = getClient(clientId);
+	var client = getClient(clientId);
 	if (!client) {
 		console.log('Unknown client %s', clientId);
 		res.status(401).json({error: 'invalid_client'});
@@ -182,14 +183,14 @@ app.post("/token", function(req, res){
 	
 	if (req.body.grant_type == 'authorization_code') {
 		
-		let code = codes[req.body.code];
+		var code = codes[req.body.code];
 		
 		if (code) {
 			delete codes[req.body.code]; // burn our code, it's been used
 			if (code.request.client_id == clientId) {
 				
-				let header = { 'typ': 'JWT', 'alg': rsaKey.alg, 'kid': rsaKey.kid };
-				let payload = {
+				var header = { 'typ': 'JWT', 'alg': rsaKey.alg, 'kid': rsaKey.kid };
+				var payload = {
 					iss: 'http://localhost:9003/',
 					sub: "Carved Rock Member",
 					aud: 'http://localhost:9002/',
@@ -199,8 +200,8 @@ app.post("/token", function(req, res){
                     scope: code.scope
 				};
 				
-				let privateKey = jose.KEYUTIL.getKey(rsaKey);
-				let access_token = jose.jws.JWS.sign(header.alg,
+				var privateKey = jose.KEYUTIL.getKey(rsaKey);
+				var access_token = jose.jws.JWS.sign(header.alg,
 					JSON.stringify(header),
 					JSON.stringify(payload),
                     privateKey);
@@ -208,13 +209,13 @@ app.post("/token", function(req, res){
                 // save this to a database in production
                 accessTokens.push({ access_token: access_token, client_id: clientId, scope: code.scope });
 
-                let refreshToken = randomstring.generate();
+                var refreshToken = randomstring.generate();
 
                 refreshTokens[refreshToken] = { clientId: clientId };
 
 				console.log('Issuing access token %s', access_token);
 
-				let token_response = { access_token: access_token, token_type: 'Bearer',  scope: code.scope.join(' '), refresh_token: refreshToken };
+				var token_response = { access_token: access_token, token_type: 'Bearer',  scope: code.scope.join(' '), refresh_token: refreshToken };
 
 				res.status(200).json(token_response);
 				console.log('Issued tokens for code %s', req.body.code);
@@ -234,7 +235,7 @@ app.post("/token", function(req, res){
 		}
 	} else if (req.body.grant_type == 'refresh_token') {
 
-        let token = refreshTokens[req.body.refresh_token];
+        var token = refreshTokens[req.body.refresh_token];
 
 			if (token) {
 				console.log("We found a matching refresh token: %s", req.body.refresh_token);
@@ -245,8 +246,8 @@ app.post("/token", function(req, res){
 					return;
                 }
 
-                let header = { 'typ': 'JWT', 'alg': rsaKey.alg, 'kid': rsaKey.kid };
-				let payload = {
+                var header = { 'typ': 'JWT', 'alg': rsaKey.alg, 'kid': rsaKey.kid };
+				var payload = {
 					iss: 'http://localhost:9003/',
 					sub: "Carved Rock Member",
 					aud: 'http://localhost:9002/',
@@ -256,10 +257,10 @@ app.post("/token", function(req, res){
                     scope: code.scope
 				};
                 
-                let refreshToken = randomstring.generate();
+                var refreshToken = randomstring.generate();
 
-				let privateKey = jose.KEYUTIL.getKey(rsaKey);
-				let access_token = jose.jws.JWS.sign(header.alg,
+				var privateKey = jose.KEYUTIL.getKey(rsaKey);
+				var access_token = jose.jws.JWS.sign(header.alg,
 					JSON.stringify(header),
 					JSON.stringify(payload),
                     privateKey);
@@ -267,7 +268,7 @@ app.post("/token", function(req, res){
                 // save this to a database in production
                 accessTokens.push({ access_token: access_token, client_id: clientId, scope: code.scope});
 
-                let token_response = { access_token: access_token, client_id: clientId, scope: code.scope, refresh_token: refreshToken };
+                var token_response = { access_token: access_token, client_id: clientId, scope: code.scope, refresh_token: refreshToken };
                 
 				res.status(200).json(token_response);
 				return;
@@ -282,8 +283,8 @@ app.post("/token", function(req, res){
 	}
 });
 
-let buildUrl = function(base, options, hash) {
-	let newUrl = url.parse(base, true);
+var buildUrl = function(base, options, hash) {
+	var newUrl = url.parse(base, true);
 	delete newUrl.search;
 	if (!newUrl.query) {
 		newUrl.query = {};
@@ -298,26 +299,23 @@ let buildUrl = function(base, options, hash) {
 	return url.format(newUrl);
 };
 
-let decodeClientCredentials = function(auth) {
-	let clientCredentials = Buffer.from(auth.slice('basic '.length), 'base64').toString().split(':');
-	let clientId = querystring.unescape(clientCredentials[0]);
-	let clientSecret = querystring.unescape(clientCredentials[1]);	
+var decodeClientCredentials = function(auth) {
+	var clientCredentials = Buffer.from(auth.slice('basic '.length), 'base64').toString().split(':');
+	var clientId = querystring.unescape(clientCredentials[0]);
+	var clientSecret = querystring.unescape(clientCredentials[1]);	
 	return { id: clientId, secret: clientSecret };
 };
 
-let getScopesFromForm = function(body) {
+var getScopesFromForm = function(body) {
 	return __.filter(__.keys(body), function(s) { return __.string.startsWith(s, 'scope_'); })
 				.map(function(s) { return s.slice('scope_'.length); });
 };
 
 app.use('/', express.static('ui/authorizationServer'));
 
-let server = app.listen(9003, 'localhost', function () {
-  let host = server.address().address;
-  let port = server.address().port;
+var server = app.listen(9003, 'localhost', function () {
+  var host = server.address().address;
+  var port = server.address().port;
 
   console.log('Carved Rock Authorization Server is listening at http://%s:%s', host, port);
 });
- 
-
-
