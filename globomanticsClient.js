@@ -27,6 +27,9 @@ var authServer = {
 	tokenEndpoint: 'http://localhost:9003/token'
 };
 
+//this is a public key from the authorization server so that
+//the authorization server can sign the tokens so that we can
+//know the authorization server they came from
 var rsaKey = {
   "alg": "RS256",
   "e": "AQAB",
@@ -35,7 +38,17 @@ var rsaKey = {
   "kid": "authserver"
 };
 
-// client information
+//client information
+//a client can be registered by the auth server in two ways
+//  1. Static Registration
+//     - here, the client is known ahead of time by the authorization
+//       server and there is a shared secret between them
+//     - you can keep the shared secret at a credential store like volt
+//     - in order to grab it at runtime when we need it
+
+//  2. Dynamic Registration
+//     - here, a client requests to be registered as a new client
+//       by the server at runtime 
 
 var client = {
 	"client_id": "globomantics-client-1",
@@ -63,6 +76,10 @@ app.get('/authorize', function(req, res){
 	scope = null;
 	state = randomstring.generate();
 	
+    //build the url that will send us to the authorization server
+    //it should contain all the parameters that the authorization
+    //server will need to verify who the client is as well as 
+    //the data that the client will need
 	var authorizeUrl = buildUrl(authServer.authorizationEndpoint, {
 		response_type: 'code',
 		scope: client.scope,
@@ -72,17 +89,24 @@ app.get('/authorize', function(req, res){
 	});
 	
 	console.log("redirect", authorizeUrl);
+    //the '/authorize' endpoint from the client redirects us to the
+    //'http://localhost:9003/authorize' endpoint of the authorization
+    //server so that our client request can be processed from the 
+    //'/callback' endpoint 
 	res.redirect(authorizeUrl);
 });
 
 app.get("/callback", function(req, res){
-
+    //if there is an error in accessing the '/callback' endpoint,
+    //capture it and send it back
 	if (req.query.error) {
 		// it's an error response, act accordingly
 		res.render('error', {error: req.query.error});
 		return;
 	}
 	
+    //the state we sent with the request must match the state that 
+    //comes back from the authorization server
 	var resState = req.query.state;
 	if (resState == state) {
 		console.log('State value matches: expected %s got %s', state, resState);
@@ -92,6 +116,7 @@ app.get("/callback", function(req, res){
 		return;
 	}
 
+    //set up data send with response token
 	var code = req.query.code;
 
 	var form_data = qs.stringify({
@@ -104,6 +129,8 @@ app.get("/callback", function(req, res){
 		'Authorization': 'Basic ' + Buffer.from(querystring.escape(client.client_id) + ':' + querystring.escape(client.client_secret)).toString('base64')
 	};
 
+    //in the background, send a post request to the authorization server
+    //for a token with data that we set up above
 	var tokRes = request('POST', authServer.tokenEndpoint, 
 		{	
 			body: form_data,
@@ -113,6 +140,7 @@ app.get("/callback", function(req, res){
 
 	console.log('Requesting access token for code %s',code);
 	
+    //verify that we received a valid token
 	if (tokRes.statusCode >= 200 && tokRes.statusCode < 300) {
 		var body = JSON.parse(tokRes.getBody());
 	
